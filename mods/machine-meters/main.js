@@ -5,6 +5,7 @@ import { exec, machines, spaces, theme, props, shared, setShared, layout, run, o
 // CPU, memory and load of this computer and every connected machine (Linux and macOS):
 // a card per machine in the sidebar, and/or one line in the status bar (props: { variant: "bar" }).
 // A click opens the options (where to show, which machines, what to show); every copy shares them.
+// Both readings keep a history of the last 40 samples.
 const MOD = "machine-meters";
 const DEFAULTS = { interval: 3, cpu: true, mem: true, load: true, graph: true, bar: "active", hidden: [] };
 const opts = () => ({ ...DEFAULTS, ...(shared(MOD) || {}) });
@@ -20,6 +21,7 @@ else echo unsupported; fi`;
 // One sampler for every copy of the mod (module code is shared by copies): a sidebar card and a
 // status bar line cost one probe per machine, not two.
 const store = { m: {}, at: 0, busy: false, rev: 0 };
+const push = (hist, v) => { hist.push(Math.max(0, Math.round(v))); if (hist.length > POINTS) hist.shift(); };
 
 function parse(text, s) {
   const out = text.trim().split("\n");
@@ -44,10 +46,8 @@ function parse(text, s) {
     s.mem = Number(out[2]) ? Math.round((100 * used) / Number(out[2])) : null;
     cpu = Math.min(100, Number((text.match(/^cpu ([\d.]+)/m) || [0, 0])[1]) / (s.cores || 1));
   }
-  if (cpu != null) {
-    s.cpu.push(Math.max(0, Math.round(cpu)));
-    if (s.cpu.length > POINTS) s.cpu.shift();
-  }
+  if (cpu != null) push(s.cpu, cpu);
+  if (s.mem != null) push(s.mems, s.mem);
 }
 
 async function sample() {
@@ -56,7 +56,7 @@ async function sample() {
   const hidden = opts().hidden;
   const targets = machines().filter((m) => !hidden.includes(m.name ?? "") && (!m.name || m.layout !== "unavailable"));
   await Promise.all(targets.map(async ({ name }) => {
-    const s = (store.m[name ?? ""] ??= { cpu: [] });
+    const s = (store.m[name ?? ""] ??= { cpu: [], mems: [] });
     try {
       parse((await exec("sh", ["-c", PROBE], { on: name, timeout: 5000 })).stdout, s);
       s.ok = s.os === "linux" || s.os === "darwin";
@@ -93,7 +93,7 @@ function setPlace(place, on) {
   if (place === "bar") {
     const status = find(tree, "status");
     if (!status) return null;
-    const bar = { id: "status-meters", type: "block", size: { px: 360 }, content: { mod: MOD, props: { variant: "bar" } } };
+    const bar = { id: "status-meters", type: "block", size: { px: 430 }, content: { mod: MOD, props: { variant: "bar" } } };
     if (status.type === "block") {
       const main = { id: "status-main", type: "block", size: { weight: 1 }, content: status.content };
       delete status.content;
@@ -105,7 +105,7 @@ function setPlace(place, on) {
     const at = sidebar.children.findIndex((c) => c.id === "sidebar-footer");
     const shown = Math.max(1, machines().length - opts().hidden.length);
     sidebar.children.splice(at < 0 ? sidebar.children.length : at, 0,
-      { id: "meters", type: "block", size: { px: 12 + 73 * shown }, content: { mod: MOD } });
+      { id: "meters", type: "block", size: { px: 12 + 86 * shown }, content: { mod: MOD } });
   }
   return run("layout.set", { layout: tree });
 }
@@ -143,8 +143,8 @@ export default class MachineMeters extends View {
       .map(([key, s]) => ({ name: key || LOCAL, s }));
   }
 
-  graph(s, t, tone, w, h, n) {
-    const hist = Array.from({ length: n }, (_, i) => s.cpu[s.cpu.length - n + i]);
+  graph(samples, t, tone, w, h, n) {
+    const hist = Array.from({ length: n }, (_, i) => samples[samples.length - n + i]);
     return h_flex().h(h).gap(1).items_end().children(
       hist.map((p) => div().w(w).h(Math.max(1, ((p ?? 0) * h) / 100)).bg(p == null ? t.border : tone(p))));
   }
@@ -178,7 +178,7 @@ export default class MachineMeters extends View {
       .child(head("Show in")).child(place("panel", "Sidebar")).child(place("bar", "Status bar"))
       .child(head("Machines")).children(machines().map(machine))
       .child(head("Readings"))
-      .child(toggle("cpu", "CPU")).child(toggle("graph", "CPU history graph")).child(toggle("mem", "Memory")).child(toggle("load", "Load average"))
+      .child(toggle("cpu", "CPU")).child(toggle("mem", "Memory")).child(toggle("graph", "History graphs")).child(toggle("load", "Load average"))
       .child(head("Status bar shows"))
       .child(h_flex().gap(6).px(6).child(choice("bar", "active", "Shown space's machine")).child(choice("bar", "all", "All")))
       .child(head("Refresh every"))
@@ -189,7 +189,7 @@ export default class MachineMeters extends View {
     if (this.isSettings()) return this.settings();
     const t = theme(), o = opts();
     const tone = (p) => (p >= 85 ? t.ansi1 : p >= 60 ? t.ansi3 : t.ansi2);
-    const open = () => openOverlay({ mod: MOD, props: { view: "settings" }, kind: "popup", width: 260, height: 396 + 26 * machines().length, at: "pointer" });
+    const open = () => openOverlay({ mod: MOD, props: { view: "settings" }, kind: "dialog", width: 260, height: 396 + 26 * machines().length });
     const dim = (text) => div().text_color(t.dim).child(text);
     const val = (text) => div().text_color(t.foreground).child(text);
 
@@ -200,8 +200,8 @@ export default class MachineMeters extends View {
         .text_size(11.8).on_click(open).children(rows.map(({ name, s }) => {
           const cpu = s.cpu.at(-1);
           return h_flex().gap(7).items_center().child(div().text_color(t.muted).child(name))
-            .when(o.cpu, (el) => el.child(dim("CPU")).when(o.graph, (e) => e.child(this.graph(s, t, tone, 2, 12, 20))).child(val(cpu == null ? "–" : `${cpu}%`)))
-            .when(o.mem, (el) => el.child(dim("MEM")).child(val(s.mem == null ? "–" : `${s.mem}%`)))
+            .when(o.cpu, (el) => el.child(dim("CPU")).when(o.graph, (e) => e.child(this.graph(s.cpu, t, tone, 2, 12, 20))).child(val(cpu == null ? "–" : `${cpu}%`)))
+            .when(o.mem, (el) => el.child(dim("MEM")).when(o.graph, (e) => e.child(this.graph(s.mems, t, tone, 2, 12, 20))).child(val(s.mem == null ? "–" : `${s.mem}%`)))
             .when(o.load && Boolean(s.load), (el) => el.child(dim(`load ${s.load}/${s.cores}`)));
         }));
     }
@@ -212,8 +212,8 @@ export default class MachineMeters extends View {
       return v_flex().gap(4)
         .child(h_flex().justify_between().child(div().text_color(t.foreground).font_semibold().child(name))
           .child(dim(o.load && s.load ? `load ${s.load}/${s.cores}` : "")))
-        .when(o.cpu, (el) => el.child(line("CPU", o.graph ? this.graph(s, t, tone, 3, 18, POINTS) : this.meter(cpu, t, tone, POINTS * 4), cpu == null ? "–" : `${cpu}%`)))
-        .when(o.mem, (el) => el.child(line("MEM", this.meter(s.mem, t, tone, POINTS * 4), s.mem == null ? "–" : `${s.mem}%`)));
+        .when(o.cpu, (el) => el.child(line("CPU", o.graph ? this.graph(s.cpu, t, tone, 3, 18, POINTS) : this.meter(cpu, t, tone, POINTS * 4), cpu == null ? "–" : `${cpu}%`)))
+        .when(o.mem, (el) => el.child(line("MEM", o.graph ? this.graph(s.mems, t, tone, 3, 18, POINTS) : this.meter(s.mem, t, tone, POINTS * 4), s.mem == null ? "–" : `${s.mem}%`)));
     });
     return v_flex().id("meters-panel").size_full().bg(t.chrome).border_t(1).border_color(t.border).px(14).py(10).gap(10).text_size(11.5)
       .overflow_y_scrollbar().on_click(open).children(rows.length ? rows : [dim("waiting for machines…")]);
