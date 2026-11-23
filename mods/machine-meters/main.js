@@ -103,9 +103,8 @@ function setPlace(place, on) {
     const sidebar = find(tree, "sidebar");
     if (!sidebar?.children) return null;
     const at = sidebar.children.findIndex((c) => c.id === "sidebar-footer");
-    const shown = Math.max(1, machines().length - opts().hidden.length);
     sidebar.children.splice(at < 0 ? sidebar.children.length : at, 0,
-      { id: "meters", type: "block", size: { px: 12 + 86 * shown }, content: { mod: MOD } });
+      { id: "meters", type: "block", size: { px: 82 }, content: { mod: MOD } }); // fit() sets the real height
   }
   return run("layout.set", { layout: tree });
 }
@@ -130,8 +129,21 @@ export default class MachineMeters extends View {
     cx.spawn(async (cx) => {
       if (block(this.place)?.hidden) return;
       if (Date.now() - store.at >= opts().interval * 1000 - 50) await sample();
+      this.fit();
       if (this.rev !== store.rev) { this.rev = store.rev; cx.notify(); }
     });
+  }
+
+  // Keeps the sidebar block as tall as its cards: a title and up to two rows a machine. Without it
+  // an unticked machine or reading leaves a gap. Runs only when the wanted height changes.
+  fit() {
+    const n = this.rows().length, o = opts();
+    if (this.place !== "panel" || !n) return;
+    const want = 21 + n * (17 + (o.cpu ? 22 : 0) + (o.mem ? 22 : 0)) + 10 * (n - 1);
+    if (want === this.want) return;
+    this.want = want;
+    const hit = block("panel");
+    if (hit) run("layout.resize", { id: hit.node.id, px: want });
   }
 
   // Shown machines: this computer first, then the others by name.

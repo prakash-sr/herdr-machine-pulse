@@ -37,14 +37,14 @@ A row is a 12 px rounded box (filled `accent` when on, `surface` with an `input`
 - Without `History graphs`, the sidebar draws CPU and memory as bars and the status bar shows only the numbers.
 - A click anywhere on the card or the line opens the options. Esc closes them.
 - `Sidebar` and `Status bar` show or hide that block. If the shown layout has no such block, ticking adds one: the sidebar block before the node `sidebar-footer` in the column `sidebar`; the status bar block at the right end of the node `status` (a lone status block becomes a row that keeps it). A place the layout has no block for is marked `not in this layout`.
-- Unticking a machine hides it and stops sampling it.
+- Unticking a machine hides it and stops sampling it; the sidebar block shrinks to the machines left.
 - `herdr-app do mod.open --name machine-meters` opens the options without a block on screen.
 
 ## Built from
 
 - One mod, `mods/machine-meters/`: `main.js` and `mod.json` (`{ "place": "none", "overlay": { "width": 260, "height": 460 } }`).
 - Props: none for the sidebar card; `{ "variant": "bar" }` for the status bar line; `{ "view": "settings" }` for the options dialog. Opened as an overlay with no variant, the mod shows the options.
-- From `herdr`: `exec`, `machines`, `spaces`, `theme`, `props`, `shared`, `setShared`, `layout`, `run`, `openOverlay`, `checking`. Commands: `layout.show`, `layout.hide`, `layout.set`.
+- From `herdr`: `exec`, `machines`, `spaces`, `theme`, `props`, `shared`, `setShared`, `layout`, `run`, `openOverlay`, `checking`. Commands: `layout.show`, `layout.hide`, `layout.set`, `layout.resize`.
 - Options live in shared state under the key `machine-meters`: `{ interval, cpu, mem, load, graph, bar: "active" | "all", hidden: [machine names, "" for this computer] }`.
 - The sampler is module-level state (`store`): per machine the CPU and memory histories (40 samples each), load, cores and the previous `/proc/stat` totals; a revision counter that copies compare to know when to redraw. Each copy has a 1-second timer that samples when the interval is up.
 - The probe is one `sh -c` per machine (`exec` with `on: name`, 5-second timeout):
@@ -56,7 +56,7 @@ A row is a 12 px rounded box (filled `accent` when on, `surface` with an `input`
 
 - Herdr's shipped layouts refuse structure changes, so adding a block only works on a personal layout (`layout.clone`). `run` returns nothing, so the mod cannot tell that a shipped layout refused; the place just stays `not in this layout`.
 - Adding a block looks for the node ids `sidebar`, `sidebar-footer` and `status`. Layouts with other ids need the blocks placed by hand (see the README).
-- The sidebar block has a fixed height, set for the machines shown when it was added (86 px each plus 12). With more machines the card scrolls; resize the block.
+- The sidebar block sets its own height with `layout.resize` whenever the number of shown machines or readings changes (21 px, plus per machine 17 for the title and 22 for each of CPU and memory, plus 10 between machines). A height the person drags is replaced at the next such change.
 - The status bar block is 430 px, room for one machine. `All` with several machines needs a wider block.
 - Open the options as a dialog, not a popup at the pointer: both meters sit at the window's bottom edge, where a pointer popup loses its top sections.
 - The macOS CPU figure comes from `ps` and is a short average, so it lags and differs from Activity Monitor's.

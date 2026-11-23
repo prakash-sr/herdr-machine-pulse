@@ -45,14 +45,14 @@ To open the options from a key, add to `~/.config/herdr-app/keys.json`:
 In a layout with other ids than Herdr's `sidebar` and `status`, add the blocks where you want them:
 
 ```json
-{ "id": "meters", "type": "block", "size": { "px": 184 }, "content": { "mod": "machine-meters" } }
+{ "id": "meters", "type": "block", "size": { "px": 82 }, "content": { "mod": "machine-meters" } }
 ```
 
 ```json
 { "id": "status-meters", "type": "block", "size": { "px": 430 }, "content": { "mod": "machine-meters", "props": { "variant": "bar" } } }
 ```
 
-The sidebar card needs about 86 px a machine plus 12. The status bar line needs about 430 px a machine.
+The sidebar block sets its own height to fit the machines and readings shown. The status bar line needs about 430 px a machine.
 
 ## Options
 

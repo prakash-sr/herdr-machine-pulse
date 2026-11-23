@@ -18,7 +18,7 @@ assert.equal(block("panel"), null);
 setPlace("panel", true);
 const sidebar = find(tree, "sidebar").children.map((c) => c.id);
 assert.deepEqual(sidebar, ["spaces", "meters", "sidebar-footer"], "sidebar block goes above the footer");
-assert.equal(find(tree, "meters").size.px, 12 + 86 * 2, "sized for two machines");
+assert.equal(find(tree, "meters").size.px, 82, "starts at one machine; the mod resizes it to fit");
 
 setPlace("bar", true);
 const status = find(tree, "status");
