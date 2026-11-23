@@ -22,7 +22,7 @@ Herdr has several machine monitors. Most open a window or a side tab of their ow
 - **History for both readings.** CPU and memory each keep a graph of the last 40 samples, colored by how busy they were.
 - **You pick the machines.** Untick the ones you don't care about and they are no longer sampled.
 - **It fits itself.** The sidebar block is exactly as tall as the machines and readings shown.
-- **Small and plain.** One JavaScript file of about 200 lines. It runs one shell probe per machine and nothing else: no helper programs, no network requests, no files written.
+- **Small and plain.** One JavaScript file of about 230 lines. It runs one shell probe per machine and nothing else: no helper programs, no network requests, no files written.
 
 It does not do alerts, disks, network, GPU or per-process views. For those, look at the other monitors under the [`herdr-mod`](https://github.com/topics/herdr-mod) topic.
 
