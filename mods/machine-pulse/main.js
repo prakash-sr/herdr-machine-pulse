@@ -6,7 +6,7 @@ import { exec, machines, spaces, theme, props, shared, setShared, layout, run, o
 // a card per machine in the sidebar, and/or one line in the status bar (props: { variant: "bar" }).
 // A click opens the options (where to show, which machines, what to show); every copy shares them.
 // Both readings keep a history of the last 40 samples.
-const MOD = "machine-meters";
+const MOD = "machine-pulse";
 const DEFAULTS = { interval: 3, cpu: true, mem: true, load: true, graph: true, bar: "active", hidden: [] };
 const opts = () => ({ ...DEFAULTS, ...(shared(MOD) || {}) });
 const POINTS = 40;
@@ -93,7 +93,7 @@ function setPlace(place, on) {
   if (place === "bar") {
     const status = find(tree, "status");
     if (!status) return null;
-    const bar = { id: "status-meters", type: "block", size: { px: 430 }, content: { mod: MOD, props: { variant: "bar" } } };
+    const bar = { id: "status-pulse", type: "block", size: { px: 430 }, content: { mod: MOD, props: { variant: "bar" } } };
     if (status.type === "block") {
       const main = { id: "status-main", type: "block", size: { weight: 1 }, content: status.content };
       delete status.content;
@@ -104,7 +104,7 @@ function setPlace(place, on) {
     if (!sidebar?.children) return null;
     const at = sidebar.children.findIndex((c) => c.id === "sidebar-footer");
     sidebar.children.splice(at < 0 ? sidebar.children.length : at, 0,
-      { id: "meters", type: "block", size: { px: 82 }, content: { mod: MOD } }); // fit() sets the real height
+      { id: "pulse", type: "block", size: { px: 82 }, content: { mod: MOD } }); // fit() sets the real height
   }
   return run("layout.set", { layout: tree });
 }
@@ -186,7 +186,7 @@ export default class MachineMeters extends View {
         () => set("hidden", on ? [...o.hidden, key] : o.hidden.filter((h) => h !== key)));
     };
     return v_flex().size_full().p(8).bg(t.popover).text_size(12.5).text_color(t.foreground).overflow_y_scrollbar()
-      .child(div().px(6).pb(2).font_semibold().child("Machine meters"))
+      .child(div().px(6).pb(2).font_semibold().child("Machine Pulse"))
       .child(head("Show in")).child(place("panel", "Sidebar")).child(place("bar", "Status bar"))
       .child(head("Machines")).children(machines().map(machine))
       .child(head("Readings"))
@@ -208,7 +208,7 @@ export default class MachineMeters extends View {
     if (this.place === "bar") {
       const active = spaces().find((s) => s.active);
       const rows = this.rows(o.bar === "active" ? active?.machine ?? "" : undefined);
-      return h_flex().id("meters-bar").size_full().px(14).gap(18).items_center().justify_end().bg(t.chrome).border_t(1).border_color(t.border)
+      return h_flex().id("pulse-bar").size_full().px(14).gap(18).items_center().justify_end().bg(t.chrome).border_t(1).border_color(t.border)
         .text_size(11.8).on_click(open).children(rows.map(({ name, s }) => {
           const cpu = s.cpu.at(-1);
           return h_flex().gap(7).items_center().child(div().text_color(t.muted).child(name))
@@ -227,7 +227,7 @@ export default class MachineMeters extends View {
         .when(o.cpu, (el) => el.child(line("CPU", o.graph ? this.graph(s.cpu, t, tone, 3, 18, POINTS) : this.meter(cpu, t, tone, POINTS * 4), cpu == null ? "–" : `${cpu}%`)))
         .when(o.mem, (el) => el.child(line("MEM", o.graph ? this.graph(s.mems, t, tone, 3, 18, POINTS) : this.meter(s.mem, t, tone, POINTS * 4), s.mem == null ? "–" : `${s.mem}%`)));
     });
-    return v_flex().id("meters-panel").size_full().bg(t.chrome).border_t(1).border_color(t.border).px(14).py(10).gap(10).text_size(11.5)
+    return v_flex().id("pulse-panel").size_full().bg(t.chrome).border_t(1).border_color(t.border).px(14).py(10).gap(10).text_size(11.5)
       .overflow_y_scrollbar().on_click(open).children(rows.length ? rows : [dim("waiting for machines…")]);
   }
 }

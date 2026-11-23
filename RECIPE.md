@@ -1,8 +1,8 @@
-# Machine meters
+# Machine Pulse
 
 Live CPU, memory and load for this computer and every machine added to Herdr, as a card per machine in the sidebar and as one line in the status bar. A click on either opens the options: where to show it, which machines, which readings and how often to refresh.
 
-![Machine meters](preview.png)
+![Machine Pulse](preview.png)
 
 ## What you see
 
@@ -17,7 +17,7 @@ Live CPU, memory and load for this computer and every machine added to Herdr, as
 
 **Colors of bars and fills:** `ansi2` (green) below 60%, `ansi3` (yellow) from 60%, `ansi1` (red) from 85%.
 
-**Options dialog** (260 px wide, in the middle of the window, `popover` background, text 12.5 px): the title `Machine meters`, then five sections with an 11 px `dim` heading each:
+**Options dialog** (260 px wide, in the middle of the window, `popover` background, text 12.5 px): the title `Machine Pulse`, then five sections with an 11 px `dim` heading each:
 
 1. `Show in`: `Sidebar`, `Status bar`.
 2. `Machines`: `This computer` and one row per machine.
@@ -38,14 +38,14 @@ A row is a 12 px rounded box (filled `accent` when on, `surface` with an `input`
 - A click anywhere on the card or the line opens the options. Esc closes them.
 - `Sidebar` and `Status bar` show or hide that block. If the shown layout has no such block, ticking adds one: the sidebar block before the node `sidebar-footer` in the column `sidebar`; the status bar block at the right end of the node `status` (a lone status block becomes a row that keeps it). A place the layout has no block for is marked `not in this layout`.
 - Unticking a machine hides it and stops sampling it; the sidebar block shrinks to the machines left.
-- `herdr-app do mod.open --name machine-meters` opens the options without a block on screen.
+- `herdr-app do mod.open --name machine-pulse` opens the options without a block on screen.
 
 ## Built from
 
-- One mod, `mods/machine-meters/`: `main.js` and `mod.json` (`{ "place": "none", "overlay": { "width": 260, "height": 460 } }`).
+- One mod, `mods/machine-pulse/`: `main.js` and `mod.json` (`{ "place": "none", "overlay": { "width": 260, "height": 460 } }`).
 - Props: none for the sidebar card; `{ "variant": "bar" }` for the status bar line; `{ "view": "settings" }` for the options dialog. Opened as an overlay with no variant, the mod shows the options.
 - From `herdr`: `exec`, `machines`, `spaces`, `theme`, `props`, `shared`, `setShared`, `layout`, `run`, `openOverlay`, `checking`. Commands: `layout.show`, `layout.hide`, `layout.set`, `layout.resize`.
-- Options live in shared state under the key `machine-meters`: `{ interval, cpu, mem, load, graph, bar: "active" | "all", hidden: [machine names, "" for this computer] }`.
+- Options live in shared state under the key `machine-pulse`: `{ interval, cpu, mem, load, graph, bar: "active" | "all", hidden: [machine names, "" for this computer] }`.
 - The sampler is module-level state (`store`): per machine the CPU and memory histories (40 samples each), load, cores and the previous `/proc/stat` totals; a revision counter that copies compare to know when to redraw. Each copy has a 1-second timer that samples when the interval is up.
 - The probe is one `sh -c` per machine (`exec` with `on: name`, 5-second timeout):
   - Linux (`/proc/stat` readable): the first line of `/proc/stat`, `MemTotal` and `MemAvailable` from `/proc/meminfo`, `nproc`, the first field of `/proc/loadavg`. CPU is `1 - idle change / total change` between two samples, with iowait counted as idle.
@@ -63,13 +63,13 @@ A row is a 12 px rounded box (filled `accent` when on, `surface` with an `input`
 - Windows machines are not supported.
 - Every new sample redraws the Herdr window, as any mod redraw does. Keep the timer at 1 second and redraw only when the sampler's revision changed.
 - Module code is shared by all copies: keep the sampler there, but start timers in `init` and skip them while `checking()`.
-- A second mod named `machine-meters` in the same home would share the options key.
+- A second mod named `machine-pulse` in the same home would share the options key.
 
 ## Done when
 
-- `herdr-app check mods/machine-meters` passes, and `node test.mjs` prints `ok`.
+- `herdr-app check mods/machine-pulse` passes, and `node test.mjs` prints `ok`.
 - With a Linux machine added and a block in the sidebar, the card shows `This computer` and the machine, each with a load figure and CPU and memory graphs that grow from the right.
 - With the status bar block, the line shows the shown space's machine and follows a switch to a space on another machine.
-- `herdr-app do mod.open --name machine-meters` opens the options; unticking `Status bar` hides the line and ticking it brings it back.
+- `herdr-app do mod.open --name machine-pulse` opens the options; unticking `Status bar` hides the line and ticking it brings it back.
 - Unticking a machine removes it from both places within one refresh.
 - `herdr-app status` lists no errors.

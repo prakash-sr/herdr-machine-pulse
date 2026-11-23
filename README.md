@@ -1,8 +1,8 @@
-# Machine meters
+# Machine Pulse
 
 A mod for the [Herdr](https://herdr.dev) desktop app: live CPU, memory and load for this computer and every machine you've added, in the sidebar, the status bar, or both.
 
-![Machine meters](preview.png)
+![Machine Pulse](preview.png)
 
 *The sidebar card, the status bar line and the options, with sample machines.*
 
@@ -18,14 +18,14 @@ This is an unofficial mod. It is not affiliated with Herdr.
 
 Ask the agent in your Herdr window:
 
-> Read `~/.config/herdr-app/AGENTS.md`, then add this mod: https://github.com/prakash-sr/herdr-machine-meters
+> Read `~/.config/herdr-app/AGENTS.md`, then add this mod: https://github.com/prakash-sr/herdr-machine-pulse
 
 Or by hand:
 
 ```sh
-git clone https://github.com/prakash-sr/herdr-machine-meters
-cp -R herdr-machine-meters/mods/machine-meters ~/.config/herdr-app/mods/
-herdr-app do mod.open --name machine-meters
+git clone https://github.com/prakash-sr/herdr-machine-pulse
+cp -R herdr-machine-pulse/mods/machine-pulse ~/.config/herdr-app/mods/
+herdr-app do mod.open --name machine-pulse
 ```
 
 The last line opens the options. Under **Show in**, tick **Sidebar** and/or **Status bar**: the mod adds its block to the shown layout, above the sidebar footer and at the right end of the status bar.
@@ -39,7 +39,7 @@ herdr-app do layout.clone '{"name":"main","as":"mine"}'
 To open the options from a key, add to `~/.config/herdr-app/keys.json`:
 
 ```json
-{ "global": { "ctrl-shift-m": "mod.open:machine-meters" } }
+{ "global": { "ctrl-shift-m": "mod.open:machine-pulse" } }
 ```
 
 ### Placing the blocks yourself
@@ -47,18 +47,18 @@ To open the options from a key, add to `~/.config/herdr-app/keys.json`:
 In a layout with other ids than Herdr's `sidebar` and `status`, add the blocks where you want them:
 
 ```json
-{ "id": "meters", "type": "block", "size": { "px": 82 }, "content": { "mod": "machine-meters" } }
+{ "id": "pulse", "type": "block", "size": { "px": 82 }, "content": { "mod": "machine-pulse" } }
 ```
 
 ```json
-{ "id": "status-meters", "type": "block", "size": { "px": 430 }, "content": { "mod": "machine-meters", "props": { "variant": "bar" } } }
+{ "id": "status-pulse", "type": "block", "size": { "px": 430 }, "content": { "mod": "machine-pulse", "props": { "variant": "bar" } } }
 ```
 
 The sidebar block sets its own height to fit the machines and readings shown. The status bar line needs about 430 px a machine.
 
 ## Options
 
-A click on either meter opens them in the middle of the window. They are kept in Herdr's shared state under `machine-meters`, so every copy of the mod follows them.
+A click on either meter opens them in the middle of the window. They are kept in Herdr's shared state under `machine-pulse`, so every copy of the mod follows them.
 
 | Option | What it does | Default |
 |---|---|---|
@@ -84,7 +84,7 @@ One `sh -c` per shown machine per refresh, shared by the sidebar and the status 
 
 ```sh
 node test.mjs                                  # the layout logic, with the app's functions faked
-herdr-app check mods/machine-meters            # loads the mod once
+herdr-app check mods/machine-pulse            # loads the mod once
 ```
 
 [RECIPE.md](RECIPE.md) is the brief an agent can rebuild the mod from.
