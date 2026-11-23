@@ -4,6 +4,8 @@ A mod for the [Herdr](https://herdr.dev) desktop app: live CPU, memory and load 
 
 ![Machine meters](preview.png)
 
+*The sidebar card, the status bar line and the options, with sample machines.*
+
 - **Every machine, local or over ssh.** Linux and macOS. Nothing to install on the machine: one small shell call per sample.
 - **Sidebar and status bar.** A card per machine with CPU and memory history graphs in the sidebar; one line in the status bar that follows the machine of the space you are looking at. Turn either on or off from the mod's options.
 - **Pick your machines.** Tick the ones to show; unticked machines are not sampled.
