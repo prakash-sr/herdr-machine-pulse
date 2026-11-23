@@ -12,6 +12,20 @@ A mod for the [Herdr](https://herdr.dev) desktop app: live CPU, memory and load 
 - **Pick your readings.** CPU, memory, their history graphs and load average, each on or off. Refresh every 2, 3, 5 or 10 seconds.
 - **Green, yellow, red.** Below 60%, from 60%, from 85%.
 
+## Why this one
+
+Herdr has several machine monitors. Most open a window or a side tab of their own, or watch only the computer Herdr runs on. Machine Pulse is for people whose agents run on other machines and who want the numbers in the places they already look:
+
+- **In the sidebar and the status bar, not a separate view.** Nothing to open: the card sits under your spaces, the line sits in the status row, and either can be turned off.
+- **Remote machines first.** Every machine you added to Herdr is sampled over Herdr's own connection, Linux or macOS, with nothing installed there.
+- **The status bar follows you.** It shows the machine of the space on screen, so switching to a space on another machine switches the numbers.
+- **History for both readings.** CPU and memory each keep a graph of the last 40 samples, colored by how busy they were.
+- **You pick the machines.** Untick the ones you don't care about and they are no longer sampled.
+- **It fits itself.** The sidebar block is exactly as tall as the machines and readings shown.
+- **Small and plain.** One JavaScript file of about 200 lines. It runs one shell probe per machine and nothing else: no helper programs, no network requests, no files written.
+
+It does not do alerts, disks, network, GPU or per-process views. For those, look at the other monitors under the [`herdr-mod`](https://github.com/topics/herdr-mod) topic.
+
 This is an unofficial mod. It is not affiliated with Herdr.
 
 ## Install
