@@ -109,6 +109,10 @@ function setPlace(place, on) {
   return run("layout.set", { layout: tree });
 }
 
+// The sidebar's rail goes by its width, as in Herdr's own sidebar mods.
+const sidebarOf = (node) => (!node ? null : node.id === "sidebar" ? node : (node.children || []).map(sidebarOf).find(Boolean));
+const narrow = () => (sidebarOf(layout())?.size?.px ?? Infinity) < 160;
+
 export default class MachineMeters extends View {
   init(_props, cx) {
     this.rev = -1;
@@ -139,7 +143,8 @@ export default class MachineMeters extends View {
   fit() {
     const n = this.rows().length, o = opts();
     if (this.place !== "panel" || !n) return;
-    const want = 21 + n * (17 + (o.cpu ? 22 : 0) + (o.mem ? 22 : 0)) + 10 * (n - 1);
+    const want = narrow() ? 17 + n * 15 * ((o.cpu ? 1 : 0) + (o.mem ? 1 : 0)) + 6 * (n - 1)
+      : 21 + n * (17 + (o.cpu ? 22 : 0) + (o.mem ? 22 : 0)) + 10 * (n - 1);
     if (want === this.want) return;
     this.want = want;
     const hit = block("panel");
@@ -216,6 +221,15 @@ export default class MachineMeters extends View {
             .when(o.mem, (el) => el.child(dim("MEM")).when(o.graph, (e) => e.child(this.graph(s.mems, t, tone, 2, 12, 20))).child(val(s.mem == null ? "–" : `${s.mem}%`)))
             .when(o.load && Boolean(s.load), (el) => el.child(dim(`load ${s.load}/${s.cores}`)));
         }));
+    }
+
+    // The sidebar folded to its rail: the numbers alone, the names in the tooltip.
+    if (narrow()) {
+      this.fit();
+      const num = (label, p) => h_flex().h(15).gap(4).justify_center().child(dim(label)).child(div().text_color(p == null ? t.dim : tone(p)).child(p == null ? "–" : `${p}%`));
+      return v_flex().id("pulse-rail").size_full().bg(t.chrome).border_t(1).border_color(t.border).py(8).gap(6).text_size(10.5).on_click(open)
+        .tooltip(this.rows().map(({ name, s }) => `${name}: CPU ${s.cpu.at(-1) ?? "–"}%, memory ${s.mem ?? "–"}%${s.load ? `, load ${s.load}/${s.cores}` : ""}`).join("\n") || "Machines")
+        .children(this.rows().map(({ s }) => v_flex().when(o.cpu, (el) => el.child(num("C", s.cpu.at(-1)))).when(o.mem, (el) => el.child(num("M", s.mem)))));
     }
 
     const rows = this.rows().map(({ name, s }) => {
