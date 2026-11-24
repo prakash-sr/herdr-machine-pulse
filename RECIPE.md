@@ -1,6 +1,6 @@
 # Machine Pulse
 
-Live CPU, memory and load for this computer and every machine added to Herdr, as a card per machine in the sidebar and as one line in the status bar. A click on either opens the options: where to show it, which machines, which readings and how often to refresh.
+CPU, memory and load of every machine you work on, in the places you already look. A card per machine in the sidebar with history graphs for both readings, and one line in the status bar that follows the machine of the space on screen, so there is no separate monitor window to open. It is built for agents that run on other machines: remote Linux and macOS machines are sampled over Herdr's own connection, with nothing installed there. A click opens the options: show it in the sidebar, the status bar or both, pick the machines, the readings and the refresh interval. One small file, one shell probe a machine, no network.
 
 ![Machine Pulse](preview.png)
 
